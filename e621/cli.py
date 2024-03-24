@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .e621 import E621
 from .config import Config
-
+from .gui import main as guimain
 
 @click.group
 @click.option('-c', '--config', 'config_file_path', type=click.Path(exists=True), default=Path('config.yaml'))
@@ -13,6 +13,9 @@ def cli(ctx, config_file_path):
     config = Config(config_file_path)
     ctx.obj['e621'] = E621(config)
 
+@cli.command
+def gui():
+    guimain()
 
 @cli.command
 @click.argument('pool_ids', type=int, nargs=-1)
