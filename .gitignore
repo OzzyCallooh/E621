@@ -1,6 +1,8 @@
 # E621
 .e621cache/*
+e621cache/*
 config.yaml
+start.bat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
