@@ -15,8 +15,8 @@ class Pool:
         pool_dir_name = sanitize_filename(pool_dir_name)
         return pool_dir_name
 
-    def download_pool_post(self, i, post_id):
-        post = self.e621.get_post(post_id)
+    def download_pool_post(self, i, post_id, ignore_post_age):
+        post = self.e621.get_post(post_id, ignore_age=ignore_post_age)
         ext = post.data['file']['ext']
         md5 = post.data['file']['md5']
         url = post.data['file']['url']
@@ -35,7 +35,7 @@ class Pool:
             print('Already downloaded:', pool_post_path)
         return post
 
-    def download(self, num_threads=3):
+    def download(self, num_threads=3, ignore_post_age=False):
         self.path.mkdir(parents=True, exist_ok=True)
         post_ids = self.data['post_ids']
         print('Post IDs:', post_ids)
@@ -43,7 +43,7 @@ class Pool:
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             n = 0
             for future in as_completed([
-                executor.submit(self.download_pool_post, i, post_id)
+                executor.submit(self.download_pool_post, i, post_id, ignore_post_age)
                 for i, post_id in enumerate(post_ids)
             ]):
                 future.result()

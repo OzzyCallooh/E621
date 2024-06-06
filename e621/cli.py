@@ -24,5 +24,20 @@ def download_pool(ctx, pool_ids, num_threads):
     for pool in pools:
         pool.download(num_threads)
 
+@cli.command
+@click.argument('pool_ids', type=int, nargs=-1)
+@click.option('-t', '--threads', 'num_threads', type=int, default=3)
+@click.option('-a', '--all', 'all_pools', is_flag=True, default=False)
+@click.pass_context
+def update_pool(ctx, pool_ids, num_threads, all_pools):
+    e621 = ctx.obj['e621']
+
+    if all_pools:
+        pool_ids = tuple(set(list(pool_ids) + e621.get_cached_pools()))
+
+    for pool_id in pool_ids:
+        pool = e621.get_pool(pool_id)
+        pool.download(num_threads, ignore_post_age=True)
+
 if __name__ == '__main__':
     cli()

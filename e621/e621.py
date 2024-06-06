@@ -1,4 +1,5 @@
 import json
+import time
 
 from .post import Post
 from .pool import Pool
@@ -16,10 +17,12 @@ class E621:
         self.posts_dir = self.config.cache_dir / 'posts'
         self.posts_dir.mkdir(exist_ok=True)
 
-    def cached_download(self, url, path):
+    def cached_download(self, url, path, ignore_age=False):
         should_download = True
         result = None
-        if path.exists():
+
+        # Check if file exists and its age does not exceed self.config.data['stale_time'] seconds old
+        if path.exists() and (ignore_age or path.stat().st_mtime + self.config.data['stale_time'] > time.time()):
             print('Using cached file:', path)
             try:
                 result = json.loads(path.read_text(encoding='utf-8'))
@@ -39,6 +42,13 @@ class E621:
 
         return result
 
+    def get_cached_pools(self):
+        pool_ids = []
+        for pool_file in self.pools_dir.glob('pool_*.json'):
+            pool_id = int(pool_file.stem[5:])
+            pool_ids.append(pool_id)
+        return pool_ids
+
     def get_pool(self, pool_id):
         pool_data = self.cached_download(
             'https://e621.net/pools/{}.json'.format(pool_id),
@@ -46,9 +56,10 @@ class E621:
         )
         return Pool(self, pool_id, pool_data)
 
-    def get_post(self, post_id):
+    def get_post(self, post_id, ignore_age=False):
         post_data = self.cached_download(
             'https://e621.net/posts/{}.json'.format(post_id),
-            self.posts_dir / 'post_{}.json'.format(post_id)
+            self.posts_dir / 'post_{}.json'.format(post_id),
+            ignore_age=ignore_age
         )['post']
         return Post(self, post_id, post_data)
