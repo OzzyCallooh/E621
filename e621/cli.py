@@ -17,6 +17,16 @@ def cli(ctx, config_file_path):
 def gui():
     guimain()
 
+# download search command:
+@cli.command
+@click.argument('query')
+@click.option('-t', '--threads', 'num_threads', type=int, default=3)
+@click.option('-l', '--limit', 'limit', type=int, default=20)
+@click.pass_context
+def download_search(ctx, query, num_threads, limit):
+    e621 = ctx.obj['e621']
+    e621.download_search(query, limit)
+
 @cli.command
 @click.argument('pool_ids', type=int, nargs=-1)
 @click.option('-t', '--threads', 'num_threads', type=int, default=3)

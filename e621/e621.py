@@ -1,6 +1,8 @@
 import json
 import time
 
+from pathvalidate import sanitize_filename
+
 from .post import Post
 from .pool import Pool
 
@@ -16,6 +18,8 @@ class E621:
         self.pools_dir.mkdir(exist_ok=True)
         self.posts_dir = self.config.cache_dir / 'posts'
         self.posts_dir.mkdir(exist_ok=True)
+        self.searches_dir = self.config.cache_dir / 'searches'
+        self.searches_dir.mkdir(exist_ok=True)
 
     def cached_download(self, url, path, ignore_age=False):
         should_download = True
@@ -48,6 +52,18 @@ class E621:
             pool_id = int(pool_file.stem[5:])
             pool_ids.append(pool_id)
         return pool_ids
+    
+    def download_search(self, query, limit=100):
+        posts = self.search(query, limit)
+        Post.download_many(posts, num_threads=3)
+
+    def search(self, query, limit=100, ignore_age=False):
+        search_data = self.cached_download(
+            'https://e621.net/posts.json?tags={}&limit={}'.format(query, limit),
+            self.searches_dir / 'search_{}.json'.format(sanitize_filename(query)),
+            ignore_age=ignore_age 
+        )
+        return [Post(self, post_data['id'], post_data) for post_data in search_data['posts']]
 
     def get_pool(self, pool_id):
         pool_data = self.cached_download(
